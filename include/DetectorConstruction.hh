@@ -58,6 +58,7 @@ class ApparatusLayeredTarget;
 class DetectionSystemDescant;
 
 class DetectionSystemSceptar;
+class DetectionSystemSceptar2;
 class DetectionSystemSpice;
 class DetectionSystemPaces;
 class DetectionSystemSodiumIodide;
@@ -91,6 +92,7 @@ public:
     void SetGenericTargetMaterial( G4String );
     void SetGenericTargetDimensions( G4ThreeVector );
     void SetGenericTargetPosition( G4ThreeVector );
+    void SetGenericTargetColour( G4ThreeVector );
     void SetGenericTarget( );
     
     G4double LayeredTargetLayerStart(int);
@@ -167,7 +169,17 @@ public:
     void AddDetectionSystemGriffinSetExtensionSuppLocation(G4int detectorPos);
     void AddDetectionSystemGriffinSetDeadLayer(G4ThreeVector params);
 
+//////////////////////////////////////////////////////////////////
+
     void AddDetectionSystemSceptar(G4int ndet);
+    void AddDetectionSystemSceptar2(G4int ndet);
+    void SetSceptar2StructureMaterial(G4String material);
+    void SetSceptar2StructureThickness(G4double thickness);
+    void SetSceptar2BuildStructure(G4bool build);
+    void SetSceptar2BuildSipm(G4bool build);
+
+//////////////////////////////////////////////////////////////////
+
     void AddDetectionSystemPaces(G4int ndet);
     void AddDetectionSystemSpice(G4int nRings);
 
@@ -195,13 +207,13 @@ private:
     G4bool    fWorldVis;
     G4bool    fBuiltDetectors;
     G4double  fGriffinFwdBackPosition;
-    G4int     fDetectorShieldSelect ;
-    G4double  fDetectorRadialDistance ;
-    G4int     fExtensionSuppressorLocation ;
-    G4int     fCustomDetectorNumber ;
-    G4int     fCustomDetectorPosition ;
-    G4int     fCustomDetectorVal ;
-    G4int     fHevimetSelector ;
+    G4int     fDetectorShieldSelect;
+    G4double  fDetectorRadialDistance;
+    G4int     fExtensionSuppressorLocation;
+    G4int     fCustomDetectorNumber;
+    G4int     fCustomDetectorPosition;
+    G4int     fCustomDetectorVal;
+    G4int     fHevimetSelector;
     G4bool    fUseTigressPositions;
 
     // Box
@@ -231,6 +243,7 @@ private:
     G4String      fGenericTargetMaterial;
     G4ThreeVector fGenericTargetDimensions;
     G4ThreeVector fGenericTargetPosition;
+    G4ThreeVector fGenericTargetColourVec;
         
     G4bool        fSetSpiceIn;
     
@@ -254,6 +267,11 @@ private:
     G4String fDescantColor;
     
     G4ThreeVector fDetEffPosition;
+
+    G4String fSceptar2StructureMaterial;
+    G4double fSceptar2StructureThickness;
+    G4bool fSceptar2BuildStruc;
+    G4bool fSceptar2BuildSipm;
 
 };
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

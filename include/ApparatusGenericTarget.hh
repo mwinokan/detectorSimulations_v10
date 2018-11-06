@@ -56,9 +56,10 @@ class ApparatusGenericTarget
     G4double fTargetLengthX;   
     G4double fTargetLengthY;
     G4double fTargetLengthZ;
+    G4ThreeVector fTargetColourVec;
 
   public: 
-    G4int Build(G4String, G4double, G4double, G4double); 
+    G4int Build(G4String, G4double, G4double, G4double, G4ThreeVector); 
     G4int PlaceApparatus(G4LogicalVolume*, G4ThreeVector, G4RotationMatrix*); 
 
   private: 

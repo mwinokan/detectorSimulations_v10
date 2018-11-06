@@ -21,6 +21,8 @@
 
 #include "ApparatusGenericTarget.hh"
 
+#include "G4NistManager.hh"
+
 ApparatusGenericTarget::ApparatusGenericTarget() :
     // LogicalVolumes 
     fTargetLog(0)
@@ -37,8 +39,11 @@ ApparatusGenericTarget::~ApparatusGenericTarget()
     delete fTargetLog;    
 }
 
-G4int ApparatusGenericTarget::Build(G4String target_material_in, G4double target_length_x_in, G4double target_length_y_in, G4double target_length_z_in)
+G4int ApparatusGenericTarget::Build(G4String target_material_in, G4double target_length_x_in, G4double target_length_y_in, G4double target_length_z_in, G4ThreeVector target_colour_vec)
 {
+
+  this->fTargetColourVec = target_colour_vec;
+
   this->fTargetMaterial = target_material_in;
   this->fTargetLengthX = target_length_x_in*mm;
   this->fTargetLengthY = target_length_y_in*mm;
@@ -65,14 +70,28 @@ G4int ApparatusGenericTarget::PlaceApparatus(G4LogicalVolume* exp_hall_log, G4Th
 
 G4int ApparatusGenericTarget::BuildTargetVolume()
 {
+
+// G4NistManager* manager = G4NistManager::Instance();
+// G4Material* mat = manager->FindOrBuildMaterial("G4_TITANIUM_DIOXIDE", 0);
+  // G4cout << " @#$@#$@#$ " << mat->GetName() << G4endl;
+  
   G4Material* material = G4Material::GetMaterial(this->fTargetMaterial);
   if( !material ) {
-    G4cout << " ----> Material " << this->fTargetMaterial << " not found, cannot build!" << G4endl;
-    return 0;
+    G4cout << " ----> Material " << this->fTargetMaterial << " not found, trying NIST." << G4endl;
+    G4NistManager* manager = G4NistManager::Instance();
+    G4Material* mat = manager->FindOrBuildMaterial(this->fTargetMaterial, 0);
+    G4cout << " @#$@#$@#$ " << mat->GetName() << G4endl;
+    if (!mat) {
+      G4cout << " ----> Material " << this->fTargetMaterial << " not found in NIST, cannot build!" << G4endl;
+      return 0;
+    } else {
+      material = mat;
+    }
   }
   
   // Set visualization attributes
-  G4VisAttributes* vis_att = new G4VisAttributes(G4Colour(0.8,0.0,0.2));
+  G4VisAttributes* vis_att = new G4VisAttributes(G4Colour(this->fTargetColourVec.x(),this->fTargetColourVec.y(),this->fTargetColourVec.z()));
+  // G4VisAttributes* vis_att = new G4VisAttributes(G4Colour(0.8,0.0,0.2));
   vis_att->SetVisibility(true);  
 
   G4ThreeVector move; 

@@ -76,6 +76,8 @@ private:
 	G4UIcmdWithAString*        fGenericTargetCmd;
 	G4UIcmdWith3VectorAndUnit* fGenericTargetDimensionsCmd;
 	G4UIcmdWith3VectorAndUnit* fGenericTargetPositionCmd;
+	G4UIcmdWith3Vector* 	   fGenericTargetColourCmd;
+	G4UIcmdWithoutParameter*   fGenericTargetBuildCmd;
 
 
 	G4UIcmdWithAString*        fLayeredTargetAddCmd;
@@ -132,6 +134,17 @@ private:
 	G4UIcmdWith3Vector*         fAddDetectionSystemTestcanCmd;
 
 	G4UIcmdWithAnInteger*       fAddDetectionSystemSceptarCmd;
+
+	///////////////////////////////////////////
+
+	G4UIcmdWithAnInteger*       fAddDetectionSystemSceptar2Cmd;
+	G4UIcmdWithAString*         fSceptar2StructureMaterialCmd;
+	G4UIcmdWithADoubleAndUnit*  fSceptar2StructureThickness; 
+	G4UIcmdWithABool*			fSceptar2BuildStruc;
+	G4UIcmdWithABool*			fSceptar2BuildSipm;
+	
+	///////////////////////////////////////////
+
 	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinForwardCmd;
 	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinForwardDetectorCmd;
 	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinBackCmd;
@@ -140,14 +153,14 @@ private:
 	G4UIcmdWithoutParameter*    fAddDetectionSystemSpiceCmd;
 	G4UIcmdWithAString*         fAddMagnetSystemSpiceCmd;
 	G4UIcmdWithAnInteger*       fAddDetectionSystemPacesCmd;
-	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinHevimetCmd ;
+	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinHevimetCmd;
 
-	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinCustomDetectorCmd ;
-	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinCustomCmd ;
-	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinShieldSelectCmd ;
-	G4UIcmdWithADoubleAndUnit*  fAddDetectionSystemGriffinSetRadialDistanceCmd ;
-	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinSetExtensionSuppLocationCmd ;
-	G4UIcmdWith3Vector*         fAddDetectionSystemGriffinSetDeadLayerCmd ;
+	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinCustomDetectorCmd;
+	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinCustomCmd;
+	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinShieldSelectCmd;
+	G4UIcmdWithADoubleAndUnit*  fAddDetectionSystemGriffinSetRadialDistanceCmd;
+	G4UIcmdWithAnInteger*       fAddDetectionSystemGriffinSetExtensionSuppLocationCmd;
+	G4UIcmdWith3Vector*         fAddDetectionSystemGriffinSetDeadLayerCmd;
 	G4UIcmdWithABool*           fUseTIGRESSPositionsCmd;
 };
 

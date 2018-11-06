@@ -84,7 +84,7 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det)
 	fWorldMagneticFieldCmd->SetUnitCategory("Magnetic flux density");
 	fWorldMagneticFieldCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-	fGenericTargetCmd = new G4UIcmdWithAString("/DetSys/app/genericTarget",this);
+	fGenericTargetCmd = new G4UIcmdWithAString("/DetSys/app/genericTargetMaterial",this);
 	fGenericTargetCmd->SetGuidance("Select material of the target.");
 	fGenericTargetCmd->SetParameterName("choice",false);
 	fGenericTargetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -98,6 +98,14 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det)
 	fGenericTargetPositionCmd->SetGuidance("Set target position - x y z unit.");
 	fGenericTargetPositionCmd->SetUnitCategory("Length");
 	fGenericTargetPositionCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	fGenericTargetColourCmd = new G4UIcmdWith3Vector("/DetSys/app/genericTargetColour",this);
+	fGenericTargetColourCmd->SetGuidance("Set target vis colour.");
+	fGenericTargetColourCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	fGenericTargetBuildCmd = new G4UIcmdWithoutParameter("/DetSys/app/genericTargetConstructor",this);
+	fGenericTargetBuildCmd->SetGuidance("Build and place target. Requires material, dimensions, and position to be set.");
+	fGenericTargetBuildCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 	fLayeredTargetAddCmd = new G4UIcmdWithAString("/DetSys/app/LayeredTargetAddLayer",this);
 	fLayeredTargetAddCmd->SetGuidance("Add layer to target - material mg/cm3 mg/cm2.");
@@ -312,6 +320,40 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* Det)
 	fAddDetectionSystemSceptarCmd->SetGuidance("Add Detection System Sceptar");
 	fAddDetectionSystemSceptarCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+	////////////////////////////////////////////////////////////////////////////////////////////
+
+	fAddDetectionSystemSceptar2Cmd = new G4UIcmdWithAnInteger("/DetSys/det/addSceptar2",this);
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("Add Detection System SCEPTAR 2.");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("[usage] /DetSys/det/addSceptar2 C");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C =  0 : do not build");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C =  1 : downstream detector");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C =  2 : upstream detector");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C =  3 : downstream + upstream detector");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C = -1 : downstream structure only");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C = -2 : upstream structure only");
+	fAddDetectionSystemSceptar2Cmd->SetGuidance("C = -3 : downstream + upstream structure only");
+	fAddDetectionSystemSceptar2Cmd->SetParameterName("configuration",false);
+	fAddDetectionSystemSceptar2Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	fSceptar2StructureMaterialCmd = new G4UIcmdWithAString("/DetSys/det/sceptar2StructureMaterial",this);
+	fSceptar2StructureMaterialCmd->SetGuidance("Select material for the SCEPTAR 2 structure.");
+	fSceptar2StructureMaterialCmd->SetParameterName("material",false);
+	fSceptar2StructureMaterialCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	fSceptar2StructureThickness = new G4UIcmdWithADoubleAndUnit( "/DetSys/det/sceptar2StructureThickness", this );
+	fSceptar2StructureThickness->SetGuidance( "Set SCEPTAR 2 structure thickness");
+	fSceptar2StructureThickness->AvailableForStates( G4State_PreInit, G4State_Idle );
+
+	fSceptar2BuildStruc = new G4UIcmdWithABool("/DetSys/det/sceptar2BuildStruc",this);
+	fSceptar2BuildStruc->SetGuidance("Build sceptar 2 holding structure");
+	fSceptar2BuildStruc->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	fSceptar2BuildSipm = new G4UIcmdWithABool("/DetSys/det/sceptar2BuildSipm",this);
+	fSceptar2BuildSipm->SetGuidance("Build sceptar 2 Silicon photomultipliers");
+	fSceptar2BuildSipm->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+	////////////////////////////////////////////////////////////////////////////////////////////
+
 	fAddDetectionSystemSpiceCmd = new G4UIcmdWithoutParameter("/DetSys/det/addSpiceDetector",this);
 	fAddDetectionSystemSpiceCmd->SetGuidance("Add Detection System Spice");
 	fAddDetectionSystemSpiceCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -341,6 +383,8 @@ DetectorMessenger::~DetectorMessenger()
 	delete fGenericTargetCmd;
 	delete fGenericTargetDimensionsCmd;
 	delete fGenericTargetPositionCmd;
+	delete fGenericTargetColourCmd;
+	delete fGenericTargetBuildCmd;
 	delete fLayeredTargetAddCmd;
 
 	delete fFieldBoxMaterialCmd;
@@ -386,6 +430,11 @@ DetectorMessenger::~DetectorMessenger()
 	delete fAddDetectionSystemDescantSpherCmd;
 
 	delete fAddDetectionSystemSceptarCmd;
+
+	delete fAddDetectionSystemSceptar2Cmd;
+	delete fSceptar2StructureMaterialCmd;
+	delete fSceptar2StructureThickness;
+
 	delete fAddDetectionSystemSpiceCmd;
 	delete fAddDetectionSystemPacesCmd;
 
@@ -430,6 +479,14 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	}
 	if(command == fGenericTargetPositionCmd ) {
 		fDetector->SetGenericTargetPosition(fGenericTargetPositionCmd->GetNew3VectorValue(newValue));
+	}
+	if(command == fGenericTargetColourCmd )
+	{
+		fDetector->SetGenericTargetColour(fGenericTargetColourCmd->GetNew3VectorValue(newValue));
+	}
+	if(command == fGenericTargetBuildCmd ) {
+		G4cout << "@#$@# fGenericTargetBuildCmd" << G4endl;
+		fDetector->SetGenericTarget();
 	}
 	//  if(command == fFieldBoxMaterialCmd ) {
 	//    fDetector->SetFieldBoxMaterial(newValue);
@@ -549,10 +606,30 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	if(command == fAddDetectionSystemTestcanCmd ) { 
 		fDetector->AddDetectionSystemTestcan(fAddDetectionSystemTestcanCmd->GetNew3VectorValue(newValue));
 	}
-
 	if(command == fAddDetectionSystemSceptarCmd ) {
 		fDetector->AddDetectionSystemSceptar(fAddDetectionSystemSceptarCmd->GetNewIntValue(newValue));
 	}
+
+	//////////////////////////////////////
+
+	if(command == fAddDetectionSystemSceptar2Cmd ) {
+		fDetector->AddDetectionSystemSceptar2(fAddDetectionSystemSceptar2Cmd->GetNewIntValue(newValue));
+	}
+	if (command == fSceptar2StructureMaterialCmd ) {
+		fDetector->SetSceptar2StructureMaterial(newValue);
+	}
+	if (command == fSceptar2StructureThickness ) {
+		fDetector->SetSceptar2StructureThickness(fSceptar2StructureThickness->GetNewDoubleValue(newValue));
+	}
+	if (command == fSceptar2BuildStruc ) {
+		fDetector->SetSceptar2BuildStructure(fSceptar2BuildStruc->GetNewBoolValue(newValue));
+	}
+	if (command == fSceptar2BuildSipm ) {
+		fDetector->SetSceptar2BuildSipm(fSceptar2BuildSipm->GetNewBoolValue(newValue));
+	}
+
+	//////////////////////////////////////
+
 	if(command == fAddDetectionSystemGriffinForwardCmd ) {
 		fDetector->AddDetectionSystemGriffinForward(fAddDetectionSystemGriffinForwardCmd->GetNewIntValue(newValue));
 	}

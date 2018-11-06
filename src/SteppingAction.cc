@@ -282,6 +282,31 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep) {
       fEventAction->AddHitTracker(mnemonic, evntNb, trackID, parentID, fStepNumber, particleType, processType, systemID, fCry-1, fDet-1, edep, pos2.x(), pos2.y(), pos2.z(), time2, targetZ);
   }
 	
+    found = volname.find("target"); // look for volumes with "target" in their name
+    if (edep != 0 && found !=G4String::npos) {                   // if non-zero energy deposition
+        G4Material *material = aStep->GetTrack()->GetMaterial(); // get pointer to material
+        G4String matName = material->GetName();                  // get material name from pointer
+        
+        int volNum, matNum;
+        std::istringstream iss(volname.substr(3,1));             // make stream from string
+        iss >> volNum;                                           // get volume number
+        matNum = 0;                                              // default material number
+        if (matName == "Silicon") matNum = 1;                    // set material numbers
+        if (matName == "G4_KAPTON") matNum = 2;                  // ''
+        if (matName == "Copper") matNum = 3;                     // ''
+        if (matName == "BC404") matNum = 4;                      // ''
+        fDet = volNum;                                           // set fDet
+        fCry = matNum;                                           // set fCry
+        systemID = 9900 + 10*matNum + volNum;                    // set systemID
+        mnemonic = "MAX___";                                     // set mnemonic
+        mnemonic.replace(3,1,G4intToG4String(volNum));           // ''
+        mnemonic.replace(5,1,G4intToG4String(matNum));           // ''
+        // add a hit tracker with parameters defined above:
+        fEventAction->AddHitTracker(mnemonic, evntNb, trackID, parentID, fStepNumber, particleType, processType, systemID, fCry-1, fDet-1, edep, pos2.x(), pos2.y(), pos2.z(), time2, targetZ);
+        // console output (optional):
+        // G4cout<<G4endl<< volname << " "<< volNum <<" "<< matNum<< " "<< systemID;
+    }
+    
     // Sceptar energy deposits ////////////////////////////////////////////////////////////////////////////////
     found = volname.find("sceptarSquareScintillatorLog");
     if (edep != 0 && found!=G4String::npos) {
@@ -324,6 +349,17 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep) {
         systemID = 5000;
         fEventAction->AddHitTracker(mnemonic, evntNb, trackID, parentID, fStepNumber, particleType, processType, systemID, fCry-1, fDet-1, edep, pos2.x(), pos2.y(), pos2.z(), time2, targetZ);
     }
+
+    // SCEPTAR II
+    found = volname.find("sceptar2Scintillator");
+    if (edep != 0 && found!=G4String::npos) {
+        SetDetNumberForSceptar2(volname);
+        mnemonic.replace(0,3,"S2_");
+        mnemonic.replace(3,2,G4intToG4String(fDet));
+        mnemonic.replace(5,1,G4intToG4String(fCry));
+        systemID = 5000;
+        fEventAction->AddHitTracker(mnemonic, evntNb, trackID, parentID, fStepNumber, particleType, processType, systemID, fCry, fDet, edep, pos2.x(), pos2.y(), pos2.z(), time2, targetZ);
+    }    
 
     // 8PI energy deposits ////////////////////////////////////////////////////////////////////////////////
     found = volname.find("8piGermaniumBlockLog");
@@ -508,6 +544,13 @@ void SteppingAction::SetDetNumberForGenericDetector(G4String volname) {
     const char *cstr = volname.c_str();//attempts a string to char conversion - to fill mnemonic
     
  G4int volNameOver9;
+    G4cout << " @#$ >>> cstr = " << cstr << G4endl;
+    G4cout << " @#$ >>> cstr[10] = " << cstr[10] << G4endl;
+    G4cout << " @#$ >>> cstr[11] = " << cstr[11] << G4endl;
+    // G4cout << " @#$ >>> cstr[4] = " << (G4int) cstr[4] << G4endl;
+    // G4cout << " @#$ >>> cstr[4]-'0' = " << cstr[4]-'0' << G4endl;
+    // G4cout << " @#$ >>> cstr[4]-'0' = " << (G4int) cstr[4]-'0' << G4endl;
+
     G4int avOver9 = cstr[4]-'0';
     G4int avOver99 = cstr[5]-'0';
     if(avOver9 == 47) { // under 10
@@ -538,6 +581,56 @@ void SteppingAction::SetDetNumberForGenericDetector(G4String volname) {
         }
     }
     //G4cout << "Stepping Action :: Found electron ekin in " << volname << " fDet = " << fDet << G4endl;
+}
+
+void SteppingAction::SetDetNumberForSceptar2(G4String volname) {
+    const char* cstr = volname.c_str(); // attempts a string to char conversion - to fill mnemonic
+    size_t loc = volname.find("impr");  // finds position of 
+
+    bool isUp = false; bool isDn = false;
+    if ( volname.find("Up") < (size_t) 40 ) isUp = true;
+    if ( volname.find("Dn") < (size_t) 40 ) isDn = true;
+
+    G4int thisImpr = -99;
+    fDet = -1;
+    fCry = -1;
+
+    if ( (G4int) cstr[loc+6]-'0' == 47) { // if Y of (av_X_impr_Y) is single digit
+        thisImpr = ((G4int) cstr[loc+5])-((G4int) '0');
+    } else if ( (G4int) cstr[loc+7]-'0' == 47 ) {
+        G4int ones = ((G4int) cstr[loc+6])-((G4int) '0');
+        G4int tens = ((G4int) cstr[loc+5])-((G4int) '0');
+        thisImpr = tens*10 + ones;
+    }
+
+    thisImpr--;
+
+    if (isUp) {
+        if (thisImpr < 16) {
+            fDet = thisImpr / 4;
+            fCry = thisImpr % 4;
+        } else {
+            fDet = thisImpr / 2 - 4;
+            fCry = thisImpr % 2 * 3;
+        }
+    }
+
+    if (isDn) {
+        if (thisImpr < 16) {
+            fDet = thisImpr / 2 + 4;
+            fCry = thisImpr % 2 + 1;
+        } else if (thisImpr > 31) {
+            fDet = 16;
+            fCry = thisImpr % 4;
+        } else {
+            fDet = thisImpr / 4 + 8;
+            fCry = thisImpr % 4;
+        }
+    }
+
+    // G4cout << volname << G4endl;
+    // G4cout << "fDet = " << fDet << ", fCry = " << fCry << G4endl;
+
 }
 
 void SteppingAction::SetDetAndCryNumberForSpiceDetector(G4String volname)
