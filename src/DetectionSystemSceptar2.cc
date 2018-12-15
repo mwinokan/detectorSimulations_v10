@@ -35,8 +35,10 @@ DetectionSystemSceptar2::DetectionSystemSceptar2() {
     scintThick = 1.6*mm;
     strucFrontGap = 0.5*mm;
     mountThick = 12.0*mm;
+    paintThick = 100.0*um;
+    // paintThick = 0.5*mm;
     
-    scintDist = (scintWidth+strucFrontGap)/tan(2*M_PI/16);
+    scintDist = (paintThick*2+scintWidth+strucFrontGap)/tan(2*M_PI/16);
 
     materialStructureDefined = false;
     buildStrucMount = false;
@@ -95,7 +97,7 @@ void DetectionSystemSceptar2::SetConfig(G4int config, G4bool struc, G4bool sipm)
     if (config > 0) { buildScint = true; buildSipm = sipm; buildStruc = struc; }
     if (config < 0) { buildScint = false; buildSipm = false; buildStruc = true; }
 
-    // buildStrucMount = buildStruc;
+    buildStrucMount = buildStruc;
 }
 
 void DetectionSystemSceptar2::BuildDetector() {
@@ -137,13 +139,13 @@ void DetectionSystemSceptar2::PlaceDetector(G4LogicalVolume* expHallLog) {
         rotate->rotateY(beta);
         rotate->rotateZ(gamma);
 
-        x = -scintWidth/2; y = scintWidth/2; z = scintThick/2 + scintDist;
+        x = -scintWidth/2 - paintThick; y = scintWidth/2 + paintThick; z = scintThick/2 + paintThick + scintDist;
         moveB = G4ThreeVector(TransX(x,y,z,theta,phi), TransY(x,y,z,theta,phi), TransZ(x,z,theta));
-        x = scintWidth/2; y = scintWidth/2; z = scintThick/2 + scintDist;
+        x = scintWidth/2 + paintThick; y = scintWidth/2 + paintThick; z = scintThick/2 + paintThick + scintDist;
         moveG = G4ThreeVector(TransX(x,y,z,theta,phi), TransY(x,y,z,theta,phi), TransZ(x,z,theta));
-        x = scintWidth/2; y = -scintWidth/2; z = scintThick/2 + scintDist;
+        x = scintWidth/2 + paintThick; y = -scintWidth/2 - paintThick; z = scintThick/2 + paintThick + scintDist;
         moveR = G4ThreeVector(TransX(x,y,z,theta,phi), TransY(x,y,z,theta,phi), TransZ(x,z,theta));
-        x = -scintWidth/2; y = -scintWidth/2; z = scintThick/2 + scintDist;
+        x = -scintWidth/2 - paintThick; y = -scintWidth/2 - paintThick; z = scintThick/2 + paintThick + scintDist;
         moveW = G4ThreeVector(TransX(x,y,z,theta,phi), TransY(x,y,z,theta,phi), TransZ(x,z,theta));
 
         if ( buildScint || buildSipm ) {
@@ -246,6 +248,8 @@ void DetectionSystemSceptar2::ConstructScintillator() {
 
     fMaterialScint = G4Material::GetMaterial("BC404");
     CheckMaterial(fMaterialScint,"BC404");
+    fMaterialScintPaint = G4Material::GetMaterial("Titanium");
+    CheckMaterial(fMaterialScintPaint,"Titanium");
 
     G4Box* scintillator = SquareScintillator();
     fScintillatorUpStrLog = new G4LogicalVolume(scintillator, fMaterialScint, "sceptar2ScintillatorUpStrLog", 0, 0, 0); // upstream
@@ -254,6 +258,17 @@ void DetectionSystemSceptar2::ConstructScintillator() {
     fScintillatorDnStrLog->SetVisAttributes(scintillatorVisAtt);
     fUpAssembly->AddPlacedVolume(fScintillatorUpStrLog, moveNull, rotateNull);
     fDnAssembly->AddPlacedVolume(fScintillatorDnStrLog, moveNull, rotateNull);
+
+    // Paint:
+    G4VisAttributes* scintPaintVisAtt = new G4VisAttributes(G4Colour(0.8,0.8,0.8));
+    scintPaintVisAtt->SetVisibility(true);
+    G4VSolid* scintPaint = ScintPaint();
+    fScintPaintUpStrLog = new G4LogicalVolume(scintPaint, fMaterialScintPaint, "sceptar2ScintPaintUpStrLog", 0, 0, 0); // upstream
+    fScintPaintDnStrLog = new G4LogicalVolume(scintPaint, fMaterialScintPaint, "sceptar2ScintPaintDnStrLog", 0, 0, 0); // downstream
+    fScintPaintUpStrLog->SetVisAttributes(scintPaintVisAtt);
+    fScintPaintDnStrLog->SetVisAttributes(scintPaintVisAtt);
+    fUpAssembly->AddPlacedVolume(fScintPaintUpStrLog, moveNull, rotateNull);
+    fDnAssembly->AddPlacedVolume(fScintPaintDnStrLog, moveNull, rotateNull);
 }
 
 void DetectionSystemSceptar2::ConstructSipm() {
@@ -359,21 +374,25 @@ void DetectionSystemSceptar2::ConstructStructureMount() {
 }
 
 G4Box* DetectionSystemSceptar2::SquareScintillator() {
-
     G4double boxZ = scintWidth;
     G4double boxY = scintWidth;
     G4double boxX = scintThick;
-
     G4Box* squareScintillator = new G4Box("squareScintillator", boxX/2, boxY/2, boxZ/2);
-
     return squareScintillator;
 }
 
+G4VSolid* DetectionSystemSceptar2::ScintPaint() {
+    G4Box* scintillator = SquareScintillator();
+    G4Box* paintBox = new G4Box("paintBox",scintThick/2+paintThick,scintWidth/2+paintThick,scintWidth/2+paintThick);
+    G4VSolid* paintShroud = new G4SubtractionSolid("paintShroud",paintBox,scintillator,0,moveNull);
+    return paintShroud;
+}
+
 G4VSolid* DetectionSystemSceptar2::SquareStructure() {
-    G4VSolid* strucPlane = new G4Box("strucPlane",strucThick/2, scintWidth*4/3, scintWidth*4/3);
-    G4VSolid* scintHole = new G4Box("scintHole",strucThick, scintWidth, scintWidth);
+    G4VSolid* strucPlane = new G4Box("strucPlane",strucThick/2, scintWidthPlusPaint*4/3, scintWidthPlusPaint*4/3);
+    G4VSolid* scintHole = new G4Box("scintHole",strucThick, scintWidthPlusPaint, scintWidthPlusPaint);
     G4VSolid* struc1 = new G4SubtractionSolid("struc1", strucPlane, scintHole, 0, moveNull);
-    G4VSolid* strucCut = new G4Box("strucCut", cutWidth, cutWidth, scintWidth*2);
+    G4VSolid* strucCut = new G4Box("strucCut", cutWidth, cutWidth, scintWidthPlusPaint*2);
 
     rotate = new G4RotationMatrix;
     rotate->rotateX(90.*deg);
@@ -401,10 +420,10 @@ G4VSolid* DetectionSystemSceptar2::SquareStructure() {
 }
 
 G4VSolid* DetectionSystemSceptar2::HalfStructure() {
-    G4VSolid* scintPlane = new G4Box("scintPlane",strucThick/2, scintWidth*4/3, scintWidth*4/3);
-    G4VSolid* scintHole = new G4Box("scintHole",strucThick, scintWidth, scintWidth);
+    G4VSolid* scintPlane = new G4Box("scintPlane",strucThick/2, scintWidthPlusPaint*4/3, scintWidthPlusPaint*4/3);
+    G4VSolid* scintHole = new G4Box("scintHole",strucThick, scintWidthPlusPaint, scintWidthPlusPaint);
     G4VSolid* struc = new G4SubtractionSolid("struc", scintPlane, scintHole, 0, moveNull);
-    G4VSolid* strucCut = new G4Box("scintCut", cutWidth, cutWidth, scintWidth*2);
+    G4VSolid* strucCut = new G4Box("scintCut", cutWidth, cutWidth, scintWidthPlusPaint*2);
 
     rotate = new G4RotationMatrix;
     rotate->rotateX(90.*deg);
@@ -428,8 +447,8 @@ G4VSolid* DetectionSystemSceptar2::HalfStructure() {
     move = G4ThreeVector(0.0,-cutDist,0.0);
     G4VSolid* struc5 = new G4SubtractionSolid("struc5", struc4, strucCut, rotate, move);
 
-    G4VSolid* halfCut = new G4Box("halfCut", strucThick, scintWidth, scintWidth*4/3);
-    move = G4ThreeVector(0.0,-scintWidth,0.0);
+    G4VSolid* halfCut = new G4Box("halfCut", strucThick, scintWidthPlusPaint, scintWidthPlusPaint*4/3);
+    move = G4ThreeVector(0.0,-scintWidthPlusPaint,0.0);
     rotate = new G4RotationMatrix;
     G4VSolid* struc6 = new G4SubtractionSolid("struc6", struc5, halfCut, rotate, move);
 
@@ -459,7 +478,8 @@ void DetectionSystemSceptar2::SetStructureThickness(G4double thickness) {
 
     cutWidth = 1.2*strucThick;
     strucGap = strucFrontGap + tan(2*M_PI/16)*strucThick/2;
-    cutDist = scintWidth + strucGap + cutWidth/cos(2*M_PI/16);
+    scintWidthPlusPaint = scintWidth + 2*paintThick; 
+    cutDist = scintWidthPlusPaint + strucGap + cutWidth/cos(2*M_PI/16);
 }
 
 void DetectionSystemSceptar2::CheckMaterial(G4Material* material, G4String name) {

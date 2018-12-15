@@ -56,6 +56,8 @@ private:
     G4LogicalVolume* fSipmConductLog;           // SiPM conductor
     G4LogicalVolume* fScintillatorUpStrLog;     // Upstream Scintillator
     G4LogicalVolume* fScintillatorDnStrLog;     // Downstream Scintillator
+    G4LogicalVolume* fScintPaintUpStrLog;     // Upstream Scintillator
+    G4LogicalVolume* fScintPaintDnStrLog;     // Downstream Scintillator
     G4LogicalVolume* fStructureLog;             // Holding structure unit
     G4LogicalVolume* fHalfStructureLog;         // Holding structure half unit
     G4LogicalVolume* fStructureMountLog;        // Holding structure mount
@@ -75,10 +77,12 @@ private:
     void CheckMaterial(G4Material* material, G4String name);
 
     G4Box* SquareScintillator();    // Square scintillator
+    G4VSolid* ScintPaint();         // Scintillator paint
     G4VSolid* SquareStructure();    // Structure unit
     G4VSolid* HalfStructure();      // Half Structure unit
 
     G4Material* fMaterialScint;
+    G4Material* fMaterialScintPaint;
     G4Material* fMaterialStructure;
 
     // translation functions for GRIFFIN coordinates
@@ -101,6 +105,8 @@ private:
     G4double strucThick;
     G4double cutDist;
     G4double mountThick;
+    G4double paintThick;
+    G4double scintWidthPlusPaint;
     
     bool buildScint;
     bool buildScintTriangles;
